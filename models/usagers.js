@@ -1,23 +1,31 @@
-let usagers = [
-  {
-    id: 1,
-    nom: "Molieres",
-    prenom: "Elodie",
-    email: "elodie@test.fr",
-    password: "123",
-  },
-  {
-    id: 2,
-    nom: "Bali",
-    prenom: "Eszter",
-    email: "eszter@test.fr",
-    password: "456",
-  },
-];
+import mongoose from "mongoose";
 
-export function getAllUsagers() {
-  return usagers;
-}
+const usagerSchema = new mongoose.Schema(
+  {
+    nom: {
+      type: String,
+      required: true,
+    },
+    prenom: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+export const Usager = mongoose.model("Usager", usagerSchema);
 
 export function passwordVerify(password) {
   const passwordRegex =
@@ -25,37 +33,26 @@ export function passwordVerify(password) {
   return passwordRegex.test(password);
 }
 
-export function addUsager(id, nom, prenom, email, password) {
+export async function getAllUsagers() {
+  return await Usager.find();
+}
+
+export async function addUsager(nom, prenom, email, password) {
   if (!passwordVerify(password)) {
     return null;
   }
-
-  const emailExiste = usagers.find((u) => u.email === email);
-  console.log("--------------------------------------");
-  console.log(emailExiste);
-  console.log("--------------------------------------");
+  const emailExiste = await Usager.findOne({ email });
   if (emailExiste) {
     return null;
   }
-
-  const newUsager = {
-    id,
-    nom,
-    prenom,
-    email,
-    password,
-  };
-  usagers.push(newUsager);
-  console.log("Usager ajouté avec succès:", newUsager);
-  console.log("Nombre total d'usagers:", usagers.length);
-  return newUsager;
+  const newUsager = new Usager({ nom, prenom, email, password });
+  return await newUsager.save();
 }
-
-export function getUsagerById(id) {
-  return usagers.find((u) => u.id == id);
+export async function getUsagerById(id) {
+  return await Usager.findById(id);
 }
-export function loginUsager(email, password) {
-  const usager = usagers.find((u) => u.email === email);
+export async function loginUsager(email, password) {
+  const usager = await Usager.findOne({ email });
   if (!usager) {
     return null;
   }
